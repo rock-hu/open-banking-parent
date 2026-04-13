@@ -14,6 +14,12 @@ mvn versions:parent-updates-report
 mvn versions:dependency-updates-aggregate-report
 mvn versions:property-updates-aggregate-report
 mvn versions:plugin-updates-aggregate-report
+
+mvn dependency-check:aggregate
+```
+
+```bash
+mvn antrun:run
 ```
 
 ## [spring-boot-dependencies/4.0.5](https://central.sonatype.com/artifact/org.springframework.boot/spring-boot-dependencies/4.0.5)
