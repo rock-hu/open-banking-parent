@@ -1,7 +1,10 @@
 # open-banking-parent
 
-## maven
+| on push                                                                                         | on schedule                                                                                          |
+| ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| ![](https://github.com/rock-hu/open-banking-parent/actions/workflows/mvn-deploy.yaml/badge.svg) | ![](https://github.com/rock-hu/open-banking-parent/actions/workflows/mvn-site-weekly.yaml/badge.svg) |
 
+## maven
 
 ```bash
 mvn initialize
