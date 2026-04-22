@@ -2,6 +2,12 @@
 
 ## maven
 
+
+```bash
+mvn initialize
+
+```
+
 ```bash
 mvn spotless:apply
 

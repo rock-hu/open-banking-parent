@@ -1,0 +1,26 @@
+name: mvn-deploy
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "pom.xml"
+      - ".github/workflows/mvn-deploy.yaml"
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "zulu"
+      - name: mvn clean deploy
+        run: mvn clean deploy
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -9,13 +9,21 @@
     </parent>
     <groupId>com.openbanking</groupId>
     <artifactId>open-banking-parent</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <packaging>pom</packaging>
     <name>open-banking-parent</name>
     <description>open-banking-parent</description>
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/${github.organization}/${project.artifactId}</url>
+        </repository>
+    </distributionManagement>
     <properties>
         <cloudevents.version>2.4.0</cloudevents.version>
         <commons.collections4.version>4.4</commons.collections4.version>
+        <github.organization>rock-hu</github.organization>
         <java.version>17</java.version>
         <junit.jupiter.version>${junit-jupiter.version}</junit.jupiter.version>
         <logbook.version>3.11.0</logbook.version>
@@ -207,6 +215,7 @@
                         <pom>
                             <includes>
                                 <include>pom.xml</include>
+                                <include>effective-pom.xml</include>
                             </includes>
                             <sortPom>
                                 <encoding>UTF-8</encoding>
@@ -234,6 +243,26 @@
                                 <goal>apply</goal>
                             </goals>
                             <phase>generate-sources</phase>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>com.rudikershaw.gitbuildhook</groupId>
+                    <artifactId>git-build-hook-maven-plugin</artifactId>
+                    <version>3.6.0</version>
+                    <configuration>
+                        <installHooks>
+                            <commit-msg>hooks/commit-msg</commit-msg>
+                            <pre-commit>hooks/pre-commit</pre-commit>
+                        </installHooks>
+                        <preCommit>mvn spotless:apply test</preCommit>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>install</goal>
+                            </goals>
+                            <phase>initialize</phase>
                         </execution>
                     </executions>
                 </plugin>
@@ -440,6 +469,10 @@
             <plugin>
                 <groupId>com.google.cloud.tools</groupId>
                 <artifactId>jib-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>com.rudikershaw.gitbuildhook</groupId>
+                <artifactId>git-build-hook-maven-plugin</artifactId>
             </plugin>
             <plugin>
                 <groupId>external.atlassian.jgitflow</groupId>
