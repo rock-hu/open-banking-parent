@@ -4,12 +4,12 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-dependencies</artifactId>
-        <version>4.0.5</version>
+        <version>4.1.0</version>
         <relativePath></relativePath>
     </parent>
     <groupId>com.openbanking</groupId>
     <artifactId>open-banking-parent</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <packaging>pom</packaging>
     <name>open-banking-parent</name>
     <description>open-banking-parent</description>
@@ -30,7 +30,7 @@
         <maven.owasp.dependency.check.plugin.version>12.2.1</maven.owasp.dependency.check.plugin.version>
         <maven.rewrite.plugin.version>6.36.0</maven.rewrite.plugin.version>
         <maven.site.plugin.version>3.21.0</maven.site.plugin.version>
-        <maven.spotless.plugin.version>2.28.0</maven.spotless.plugin.version>
+        <maven.spotless.plugin.version>3.9.0</maven.spotless.plugin.version>
         <maven.springdoc.openapi.plugin.version>1.5</maven.springdoc.openapi.plugin.version>
         <maven.versions.plugin.version>2.21.0</maven.versions.plugin.version>
         <problem.spring.web.version>0.29.1</problem.spring.web.version>
@@ -39,7 +39,7 @@
         <rewrite.version>8.79.0</rewrite.version>
         <spring.amqp.version>${spring-amqp.version}</spring.amqp.version>
         <spring.batch.version>${spring-batch.version}</spring.batch.version>
-        <spring.boot.version>4.0.5</spring.boot.version>
+        <spring.boot.version>4.1.0</spring.boot.version>
         <spring.cloud.version>2025.1.1</spring.cloud.version>
         <spring.data.version>${spring-data-bom.version}</spring.data.version>
         <spring.framework.version>${spring-framework.version}</spring.framework.version>
@@ -78,6 +78,20 @@
                 <groupId>io.github.resilience4j</groupId>
                 <artifactId>resilience4j-bom</artifactId>
                 <version>${resilience4j.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.sentry</groupId>
+                <artifactId>sentry-bom</artifactId>
+                <version>8.48.0</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.sentry</groupId>
+                <artifactId>sentry-bom</artifactId>
+                <version>8.48.0</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -204,14 +218,14 @@
                                 </indent>
                             </format>
                         </formats>
-                        <java>
-                            <!--<removeUnusedImports></removeUnusedImports>-->
-                            <importOrder></importOrder>
-                            <eclipse>
-                                <file>eclipse/eclipse-java-google-style.xml</file>
-                                <version>4.13.0</version>
-                            </eclipse>
-                        </java>
+                        <palantirJavaFormat>
+                            <version>2.39.0</version>
+                            <!-- optional -->
+                            <style>PALANTIR</style>
+                            <!-- or AOSP/GOOGLE (optional) -->
+                            <formatJavadoc>false</formatJavadoc>
+                            <!-- defaults to false (optional, requires at least Palantir 2.39.0) -->
+                        </palantirJavaFormat>
                         <pom>
                             <includes>
                                 <include>pom.xml</include>
