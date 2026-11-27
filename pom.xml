@@ -210,6 +210,19 @@
         <pluginManagement>
             <plugins>
                 <plugin>
+                    <groupId>external.atlassian.jgitflow</groupId>
+                    <artifactId>jgitflow-maven-plugin</artifactId>
+                    <configuration>
+                        <flowInitContext>
+                            <masterBranchName>master</masterBranchName>
+                            <developBranchName>develop</developBranchName>
+                            <featureBranchPrefix>feature/</featureBranchPrefix>
+                            <releaseBranchPrefix>release/</releaseBranchPrefix>
+                            <hotfixBranchPrefix>hotfix/</hotfixBranchPrefix>
+                        </flowInitContext>
+                    </configuration>
+                </plugin>
+                <plugin>
                     <groupId>com.diffplug.spotless</groupId>
                     <artifactId>spotless-maven-plugin</artifactId>
                     <version>${maven.spotless.plugin.version}</version>
@@ -306,12 +319,6 @@
                             <phase>generate-sources</phase>
                         </execution>
                     </executions>
-                </plugin>
-                <plugin>
-                    <groupId>io.takari.maven.plugins</groupId>
-                    <artifactId>takari-lifecycle-plugin</artifactId>
-                    <version>2.3.0</version>
-                    <extensions>true</extensions>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -466,6 +473,12 @@
                     <groupId>org.springdoc</groupId>
                     <artifactId>springdoc-openapi-maven-plugin</artifactId>
                     <version>${maven.springdoc.openapi.plugin.version}</version>
+                    <configuration>
+                        <apiDocsUrl>http://localhost:8080/v3/api-docs.yaml</apiDocsUrl>
+                        <outputFileName>api-docs-${project.version}.yaml</outputFileName>
+                        <outputDir>${project.basedir}/docs</outputDir>
+                        <skip>false</skip>
+                    </configuration>
                     <executions>
                         <execution>
                             <id>integration-test</id>
@@ -478,7 +491,31 @@
                 <plugin>
                     <groupId>org.springframework.boot</groupId>
                     <artifactId>spring-boot-maven-plugin</artifactId>
+                    <configuration>
+                        <fork>false</fork>
+                        <jmxPort>9002</jmxPort>
+                        <jvmArguments>-Dspring.application.admin.enabled=true
+                            -Xms128m
+                            -Xmx256m
+                            -XX:+FlightRecorder
+                            -XX:StartFlightRecording=duration=5s,filename=${project.artifactId}.jfr</jvmArguments>
+                        <excludes>
+                            <exclude>
+                                <groupId>org.projectlombok</groupId>
+                                <artifactId>lombok</artifactId>
+                            </exclude>
+                        </excludes>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>start</goal>
+                                <goal>stop</goal>
+                            </goals>
+                        </execution>
+                    </executions>
                 </plugin>
+
                 <plugin>
                     <groupId>pl.project13.maven</groupId>
                     <artifactId>git-commit-id-plugin</artifactId>
@@ -500,9 +537,37 @@
                         </execution>
                     </executions>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-antrun-plugin</artifactId>
+                    <version>3.2.0</version>
+                    <configuration>
+                        <target name="copy-mvn-site">
+                            <copy todir="docs">
+                                <fileset dir="target/site">
+                                    <include name="**/*"></include>
+                                </fileset>
+                            </copy>
+                        </target>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>copy-mvn-site</id>
+                            <goals>
+                                <goal>run</goal>
+                            </goals>
+                            <phase>post-site</phase>
+                        </execution>
+                    </executions>
+                </plugin>
+
             </plugins>
         </pluginManagement>
         <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
             <plugin>
                 <groupId>com.diffplug.spotless</groupId>
                 <artifactId>spotless-maven-plugin</artifactId>
@@ -518,42 +583,10 @@
             <plugin>
                 <groupId>external.atlassian.jgitflow</groupId>
                 <artifactId>jgitflow-maven-plugin</artifactId>
-                <configuration>
-                    <flowInitContext>
-                        <masterBranchName>master</masterBranchName>
-                        <developBranchName>develop</developBranchName>
-                        <featureBranchPrefix>feature/</featureBranchPrefix>
-                        <releaseBranchPrefix>release/</releaseBranchPrefix>
-                        <hotfixBranchPrefix>hotfix/</hotfixBranchPrefix>
-                    </flowInitContext>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>io.takari.maven.plugins</groupId>
-                <artifactId>takari-lifecycle-plugin</artifactId>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>
-                <version>3.2.0</version>
-                <configuration>
-                    <target name="copy-mvn-site">
-                        <copy todir="docs">
-                            <fileset dir="target/site">
-                                <include name="**/*"></include>
-                            </fileset>
-                        </copy>
-                    </target>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>copy-mvn-site</id>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                        <phase>post-site</phase>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -568,210 +601,44 @@
                 <artifactId>maven-site-plugin</artifactId>
             </plugin>
             <plugin>
-                <groupId>org.openrewrite.maven</groupId>
-                <artifactId>rewrite-maven-plugin</artifactId>
-                <configuration>
-                    <activeRecipes></activeRecipes>
-                    <activeStyles>
-                        <style>org.openrewrite.java.GoogleJavaFormat</style>
-                    </activeStyles>
-                    <configLocation>rewrite.yml</configLocation>
-                    <failOnDryRunResults>false</failOnDryRunResults>
-                    <dependencies>
-                        <dependency>
-                            <groupId>org.openrewrite</groupId>
-                            <artifactId>rewrite-csharp</artifactId>
-                            <version>8.79.0</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.openrewrite</groupId>
-                            <artifactId>rewrite-docker</artifactId>
-                            <version>8.79.0</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.openrewrite</groupId>
-                            <artifactId>rewrite-javascript</artifactId>
-                            <version>8.79.0</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.openrewrite</groupId>
-                            <artifactId>rewrite-polyglot</artifactId>
-                            <version>2.10.1</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.openrewrite</groupId>
-                            <artifactId>rewrite-python</artifactId>
-                            <version>8.79.0</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.openrewrite</groupId>
-                            <artifactId>rewrite-templating</artifactId>
-                            <version>1.41.4</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.openrewrite.meta</groupId>
-                            <artifactId>rewrite-analysis</artifactId>
-                            <version>2.31.8</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.openrewrite.recipe</groupId>
-                            <artifactId>rewrite-all</artifactId>
-                            <version>1.24.1</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.openrewrite.recipe</groupId>
-                            <artifactId>rewrite-apache</artifactId>
-                            <version>2.24.0</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.openrewrite.recipe</groupId>
-                            <artifactId>rewrite-codemods</artifactId>
-                            <version>0.25.1</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.openrewrite.recipe</groupId>
-                            <artifactId>rewrite-cucumber-jvm</artifactId>
-                            <version>2.11.11</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.openrewrite.recipe</groupId>
-                            <artifactId>rewrite-feature-flags</artifactId>
-                            <version>1.20.2</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.openrewrite.recipe</groupId>
-                            <artifactId>rewrite-github-actions</artifactId>
-                            <version>3.20.0</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.openrewrite.recipe</groupId>
-                            <artifactId>rewrite-gitlab</artifactId>
-                            <version>0.20.2</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.openrewrite.recipe</groupId>
-                            <artifactId>rewrite-hibernate</artifactId>
-                            <version>2.19.2</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.openrewrite.recipe</groupId>
-                            <artifactId>rewrite-jackson</artifactId>
-                            <version>1.21.0</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.openrewrite.recipe</groupId>
-                            <artifactId>rewrite-java-dependencies</artifactId>
-                            <version>1.54.0</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.openrewrite.recipe</groupId>
-                            <artifactId>rewrite-jenkins</artifactId>
-                            <version>0.34.6</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.openrewrite.recipe</groupId>
-                            <artifactId>rewrite-joda</artifactId>
-                            <version>0.8.0</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.openrewrite.recipe</groupId>
-                            <artifactId>rewrite-liberty</artifactId>
-                            <version>1.23.11</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.openrewrite.recipe</groupId>
-                            <artifactId>rewrite-logging-frameworks</artifactId>
-                            <version>3.27.0</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.openrewrite.recipe</groupId>
-                            <artifactId>rewrite-micrometer</artifactId>
-                            <version>0.28.8</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.openrewrite.recipe</groupId>
-                            <artifactId>rewrite-micronaut</artifactId>
-                            <version>2.33.1</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.openrewrite.recipe</groupId>
-                            <artifactId>rewrite-migrate-java</artifactId>
-                            <version>3.32.0</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.openrewrite.recipe</groupId>
-                            <artifactId>rewrite-netty</artifactId>
-                            <version>0.8.0</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.openrewrite.recipe</groupId>
-                            <artifactId>rewrite-okhttp</artifactId>
-                            <version>0.22.3</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.openrewrite.recipe</groupId>
-                            <artifactId>rewrite-openapi</artifactId>
-                            <version>0.31.3</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.openrewrite.recipe</groupId>
-                            <artifactId>rewrite-prethink</artifactId>
-                            <version>0.4.2</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.openrewrite.recipe</groupId>
-                            <artifactId>rewrite-quarkus</artifactId>
-                            <version>2.30.0</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.openrewrite.recipe</groupId>
-                            <artifactId>rewrite-rewrite</artifactId>
-                            <version>0.23.0</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.openrewrite.recipe</groupId>
-                            <artifactId>rewrite-spring</artifactId>
-                            <version>6.29.0</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.openrewrite.recipe</groupId>
-                            <artifactId>rewrite-spring-to-quarkus</artifactId>
-                            <version>0.7.1</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.openrewrite.recipe</groupId>
-                            <artifactId>rewrite-static-analysis</artifactId>
-                            <version>2.32.0</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.openrewrite.recipe</groupId>
-                            <artifactId>rewrite-testing-frameworks</artifactId>
-                            <version>3.34.0</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.openrewrite.recipe</groupId>
-                            <artifactId>rewrite-third-party</artifactId>
-                            <version>0.37.1</version>
-                        </dependency>
-                    </dependencies>
-                </configuration>
+                <groupId>pl.project13.maven</groupId>
+                <artifactId>git-commit-id-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
                 <executions>
                     <execution>
                         <goals>
-                            <goal>dryRun</goal>
+                            <goal>prepare-agent</goal>
                         </goals>
-                        <phase>verify</phase>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <groupId>pl.project13.maven</groupId>
-                <artifactId>git-commit-id-plugin</artifactId>
             </plugin>
         </plugins>
     </build>
     <reporting>
         <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>versions-maven-plugin</artifactId>
+                <reportSets>
+                    <reportSet>
+                        <reports>
+                            <report>dependency-updates-report</report>
+                            <report>plugin-updates-report</report>
+                            <report>property-updates-report</report>
+                        </reports>
+                    </reportSet>
+                </reportSets>
+            </plugin>
             <plugin>
                 <groupId>com.github.spotbugs</groupId>
                 <artifactId>spotbugs-maven-plugin</artifactId>
@@ -785,27 +652,23 @@
                 <artifactId>taglist-maven-plugin</artifactId>
             </plugin>
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>versions-maven-plugin</artifactId>
-                <version>${maven.versions.plugin.version}</version>
+                <groupId>org.owasp</groupId>
+                <artifactId>dependency-check-maven</artifactId>
                 <reportSets>
                     <reportSet>
                         <reports>
-                            <report>dependency-updates-report</report>
-                            <report>plugin-updates-report</report>
-                            <report>property-updates-report</report>
+                            <report>aggregate</report>
                         </reports>
                     </reportSet>
                 </reportSets>
             </plugin>
             <plugin>
-                <groupId>org.owasp</groupId>
-                <artifactId>dependency-check-maven</artifactId>
-                <version>${maven.owasp.dependency.check.plugin.version}</version>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
                 <reportSets>
                     <reportSet>
                         <reports>
-                            <report>aggregate</report>
+                            <report>report</report>
                         </reports>
                     </reportSet>
                 </reportSets>
